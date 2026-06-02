@@ -1,0 +1,37 @@
+!pip install ultralytics
+from ultralytics import YOLO
+import IPython
+#라이브러리 설치
+!nvidia-smi
+
+# Ultralytics 예제 분류 데이터셋 다운로드
+import zipfile
+from pathlib import Path
+
+dataset_url = "https://github.com"
+!curl -L {dataset_url} -o images.zip
+!unzip -q images.zip -d datasets/
+
+# 사전 학습된 분류 모델 로드
+model = YOLO('yolov8n-cls.pt')
+
+# 모델 학습
+results = model.train(
+    data='cifar10',  # 본인 데이터셋 경로(YAML 또는 폴더)로 변경
+    epochs=10,       # 학습 횟수
+    imgsz=64,        # 이미지 크기
+    batch=64         # 배치 사이즈
+)
+#모델 검
+results = model.val()
+
+# 이미지 예측 수행
+results = model('datasets/images/zidane.jpg') # 테스트할 이미지 경로
+
+# 예측 결과 출력 및 이미지 표시
+for r in results:
+    print(r.probs) # 상위 5개의 클래스 확률 출력
+    
+# 코랩 화면에 결과 이미지 표시
+from PIL import Image
+Image.open('runs/classify/predict/zidane.jpg').show()
