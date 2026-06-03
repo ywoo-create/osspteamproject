@@ -1,0 +1,86 @@
+import sounddevice as sd
+import scipy.io.wavfile as wav
+import librosa
+import librosa.display
+import matplotlib.pyplot as plt
+import soundfile as sf
+import numpy as np
+
+# -----------------
+# 1. 녹음
+# -----------------
+
+duration = 5
+sample_rate = 22050
+
+print("녹음 시작")
+
+audio = sd.rec(
+    int(duration * sample_rate),
+    samplerate=sample_rate,
+    channels=1,
+    dtype='float32'
+)
+
+sd.wait()
+
+wav.write(
+    "recorded_audio.wav",
+    sample_rate,
+    audio
+)
+
+print("녹음 완료")
+
+# -----------------
+# 2. 전처리
+# -----------------
+
+audio, sr = librosa.load(
+    "recorded_audio.wav",
+    sr=22050
+)
+
+audio = librosa.util.normalize(audio)
+
+sf.write(
+    "normalized_audio.wav",
+    audio,
+    sr
+)
+
+# -----------------
+# 3. Mel-Spectrogram
+# -----------------
+
+mel = librosa.feature.melspectrogram(
+    y=audio,
+    sr=sr,
+    n_mels=128
+)
+
+mel_db = librosa.power_to_db(
+    mel,
+    ref=np.max
+)
+
+plt.figure(figsize=(8,4))
+
+librosa.display.specshow(
+    mel_db,
+    sr=sr,
+    x_axis='time',
+    y_axis='mel'
+)
+
+plt.colorbar()
+
+plt.title("Mel Spectrogram")
+
+plt.savefig(
+    "mel_spectrogram.png"
+)
+
+plt.show()
+
+print("Mel-Spectrogram 생성 완료")
