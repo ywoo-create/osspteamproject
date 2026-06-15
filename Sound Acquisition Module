@@ -6,10 +6,6 @@ import matplotlib.pyplot as plt
 import soundfile as sf
 import numpy as np
 
-# -----------------
-# 1. 녹음
-# -----------------
-
 duration = 5
 sample_rate = 22050
 
@@ -32,10 +28,6 @@ wav.write(
 
 print("녹음 완료")
 
-# -----------------
-# 2. 전처리
-# -----------------
-
 audio, sr = librosa.load(
     "recorded_audio.wav",
     sr=22050
@@ -48,10 +40,6 @@ sf.write(
     audio,
     sr
 )
-
-# -----------------
-# 3. Mel-Spectrogram
-# -----------------
 
 mel = librosa.feature.melspectrogram(
     y=audio,
