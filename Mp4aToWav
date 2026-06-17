@@ -1,0 +1,71 @@
+import os
+from google.colab import drive
+
+
+# 2. 오디오 추출 라이브러리 임포트
+from moviepy.editor import AudioFileClip
+
+# ==============================================================================
+# [경로 설정] 내 드라이브 경로에 맞게 확인해주세요.
+# ==============================================================================
+INPUT_DIR = '/content/drive/MyDrive/오디오파일mp4'
+OUTPUT_DIR = '/content/drive/MyDrive/오디오파일wav'
+# ==============================================================================
+
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
+    print(f"새 폴더를 생성했습니다: {OUTPUT_DIR}")
+
+
+# 3. 변환 함수 정의
+def convert_m4a_to_wav(input_path, output_path, target_sr=22050):
+    try:
+        # m4a 오디오 파일 로드
+        audio_clip = AudioFileClip(input_path)
+
+        # 프로젝트 스펙(sr=22050)에 맞춰서 wav 파일로 저장
+        audio_clip.write_audiofile(
+            output_path,
+            fps=target_sr,
+            codec='pcm_s16le', # 표준 16-bit WAV 포맷
+            logger=None        # 변환 과정 로그 숨기기
+        )
+        audio_clip.close()
+        return True
+    except Exception as e:
+        print(f"\n[오류] {os.path.basename(input_path)} 변환 실패: {e}")
+        return False
+
+
+# 4. 폴더 탐색 및 일괄 변환 시작 (.m4a 전용)
+print("\n🔍 .m4a 파일을 탐색하고 변환 작업을 시작합니다...")
+success_count = 0
+fail_count = 0
+
+for root, dirs, files in os.walk(INPUT_DIR):
+    for file in files:
+        # ★ 확장자 체크 부분을 .m4a로 변경했습니다. ★
+        if file.lower().endswith('.m4a'):
+            source_file_path = os.path.join(root, file)
+
+            # 구조 유지를 위한 상대 경로 계산
+            rel_path = os.path.relpath(root, INPUT_DIR)
+            target_folder = os.path.join(OUTPUT_DIR, rel_path)
+
+            if not os.path.exists(target_folder):
+                os.makedirs(target_folder)
+
+            # 확장자를 .m4a에서 .wav로 변경
+            filename_without_ext = os.path.splitext(file)[0]
+            target_file_path = os.path.join(target_folder, f"{filename_without_ext}.wav")
+
+            print(f"🔄 변환 중: {os.path.join(rel_path, file)} ➡️ {filename_without_ext}.wav")
+
+            if convert_m4a_to_wav(source_file_path, target_file_path, target_sr=22050):
+                success_count += 1
+            else:
+                fail_count += 1
+
+print("-" * 60)
+print(f"🎉 작업 완료! [성공: {success_count}개 / 실패: {fail_count}개]")
+print(f"📂 저장된 구글 드라이브 경로: {OUTPUT_DIR}")
