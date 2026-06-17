@@ -1,1 +1,7 @@
-
+numpy
+librosa
+sounddevice
+soundfile
+tensorflow
+pillow
+ultralytics
