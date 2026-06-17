@@ -1,0 +1,148 @@
+!pip install librosa soundfile numpy -q
+
+import os
+
+GITHUB_USER = "ywoo-create"
+GITHUB_REPO = "osspteamproject"
+GITHUB_BRANCH = "dataset"
+
+zip_url = f"https://github.com/{GITHUB_USER}/{GITHUB_REPO}/archive/refs/heads/{GITHUB_BRANCH}.zip"
+
+!wget -q -O dataset.zip "{zip_url}"
+!unzip -q -o dataset.zip
+!rm dataset.zip
+
+EXTRACTED_DIR = f"{GITHUB_REPO}-{GITHUB_BRANCH}"
+print("압축 해제 완료. 폴더 목록:")
+!ls "{EXTRACTED_DIR}"
+
+SOURCE_ROOT = EXTRACTED_DIR          # 원본 데이터가 있는 루트
+OUTPUT_ROOT = "augmented_dataset"    # 증강 결과를 저장할 루트
+
+CLASS_DIRS = [
+    "0_indoor_alarms",
+    "1_outdoor_warnings",
+    "2_emergency_alarms",
+]
+
+os.makedirs(OUTPUT_ROOT, exist_ok=True)
+for c in CLASS_DIRS:
+    os.makedirs(os.path.join(OUTPUT_ROOT, c), exist_ok=True)
+
+import numpy as np
+import librosa
+import soundfile as sf
+import random
+
+SAMPLE_RATE = 22050  # 모든 파일을 이 샘플링레이트로 통일해서 불러옴
+
+def load_audio(path, sr=SAMPLE_RATE):
+    y, _ = librosa.load(path, sr=sr, mono=True)
+    return y
+
+def time_shift(y, sr=SAMPLE_RATE, shift_max=0.3):
+    """오디오를 시간축으로 좌우 이동 (빈 공간은 0으로 채움)"""
+    shift_amt = int(sr * random.uniform(-shift_max, shift_max))
+    return np.roll(y, shift_amt)
+
+def pitch_shift(y, sr=SAMPLE_RATE, n_steps_range=(-3, 3)):
+    """음높이를 랜덤하게 변경 (반음 단위)"""
+    n_steps = random.uniform(*n_steps_range)
+    return librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
+
+def time_stretch(y, rate_range=(0.85, 1.15)):
+    """재생 속도를 랜덤하게 변경 (0.85배~1.15배)"""
+    rate = random.uniform(*rate_range)
+    return librosa.effects.time_stretch(y, rate=rate)
+
+def add_noise(y, noise_factor_range=(0.002, 0.01)):
+    """가우시안 화이트 노이즈 추가"""
+    noise_factor = random.uniform(*noise_factor_range)
+    noise = np.random.randn(len(y))
+    return y + noise_factor * noise
+
+def change_volume(y, gain_range=(0.6, 1.4)):
+    """볼륨(게인)을 랜덤하게 조절"""
+    gain = random.uniform(*gain_range)
+    y_new = y * gain
+    max_val = np.max(np.abs(y_new))
+    if max_val > 1.0:
+        y_new = y_new / max_val
+    return y_new
+
+def time_mask(y, sr=SAMPLE_RATE, mask_max_ratio=0.1):
+    """오디오 일부 구간을 무음으로 마스킹 (occlusion에 대한 강건성 확보)"""
+    y_new = y.copy()
+    mask_len = int(len(y) * random.uniform(0.02, mask_max_ratio))
+    if mask_len <= 0 or len(y) <= mask_len:
+        return y_new
+    start = random.randint(0, len(y) - mask_len)
+    y_new[start:start + mask_len] = 0.0
+    return y_new
+
+AUGMENTATIONS = [
+    ("shift", time_shift),
+    ("pitch", pitch_shift),
+    ("stretch", time_stretch),
+    ("noise", add_noise),
+    ("volume", change_volume),
+    ("mask", time_mask),
+]
+
+def normalize_audio(y):
+    """클리핑 방지를 위한 안전한 정규화"""
+    max_val = np.max(np.abs(y))
+    if max_val > 0:
+        y = y / max_val * 0.95
+    return y
+
+import shutil
+
+total_original = 0
+total_generated = 0
+
+for class_name in CLASS_DIRS:
+    src_dir = os.path.join(SOURCE_ROOT, class_name)
+    dst_dir = os.path.join(OUTPUT_ROOT, class_name)
+
+    if not os.path.isdir(src_dir):
+        print(f"[경고] 폴더를 찾을 수 없음: {src_dir}")
+        continue
+
+    wav_files = [f for f in os.listdir(src_dir) if f.lower().endswith(".wav")]
+    print(f"\n[{class_name}] 원본 {len(wav_files)}개 파일 처리 시작")
+
+    for fname in wav_files:
+        src_path = os.path.join(src_dir, fname)
+        base_name = os.path.splitext(fname)[0]
+
+        try:
+            y = load_audio(src_path)
+        except Exception as e:
+            print(f"  [에러] {fname} 로드 실패: {e}")
+            continue
+
+        shutil.copy(src_path, os.path.join(dst_dir, fname))
+        total_original += 1
+
+        for aug_name, aug_func in AUGMENTATIONS:
+            try:
+                y_aug = aug_func(y)
+                y_aug = normalize_audio(y_aug)
+                out_name = f"{base_name}_{aug_name}.wav"
+                out_path = os.path.join(dst_dir, out_name)
+                sf.write(out_path, y_aug, SAMPLE_RATE)
+                total_generated += 1
+            except Exception as e:
+                print(f"  [에러] {fname} -> {aug_name} 증강 실패: {e}")
+
+    print(f"[{class_name}] 완료")
+
+print(f"\n원본 파일 수: {total_original}")
+print(f"증강으로 생성된 파일 수: {total_generated}")
+print(f"전체 파일 수(원본+증강): {total_original + total_generated}")
+
+shutil.make_archive("augmented_dataset", "zip", OUTPUT_ROOT)
+
+from google.colab import files
+files.download("augmented_dataset.zip")
