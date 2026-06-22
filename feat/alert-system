@@ -1,0 +1,20 @@
+# alert_module.py
+import numpy as np
+
+def predict_and_alert(model, preprocessed_data):
+    # CNN 모델 예측
+    prediction = model.predict(preprocessed_data)
+    class_idx = np.argmax(prediction)
+    confidence = np.max(prediction) * 100
+    
+    print("\n" + "="*50)
+    if class_idx == 0:
+        print("💡 [알림] 위험도 1: 일상 소음 (타이머/초인종) 감지됨")
+        print(f"   ▶ 신뢰도: {confidence:.2f}% | 조치: 화면 노란색 점멸 및 아이콘 표시")
+    elif class_idx == 1:
+        print("⚠️ [주의] 위험도 2: 주의 소음 (사이렌/자동차 경적) 감지됨")
+        print(f"   ▶ 신뢰도: {confidence:.2f}% | 조치: 화면 주황색 점멸 및 진동 알림")
+    elif class_idx == 2:
+        print("🚨 [위험] 위험도 3: 대피 경보 (화재/재난) 감지됨!!")
+        print(f"   ▶ 신뢰도: {confidence:.2f}% | 조치: 🔴 화면 붉은색 강한 점멸 및 긴급 팝업!!")
+    print("="*50 + "\n")

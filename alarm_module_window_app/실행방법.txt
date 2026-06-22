@@ -1,0 +1,22 @@
+실시간 소리 알림 모듈 실행 방법
+
+1. Anaconda Prompt에서 가상환경을 활성화합니다.
+   conda activate test
+
+2. 이 폴더로 이동합니다.
+   cd /d 파일을_저장한_폴더경로
+
+3. 필요한 모듈을 설치합니다.
+   python -m pip install -r requirements_alarm_window.txt
+
+4. 앱을 실행합니다.
+   python alarm_module_window.py
+
+5. 창이 열리면 자동으로 마이크 입력이 시작됩니다.
+   3초마다 실내 알림음, 실외 경고음, 긴급 경보음을 분류합니다.
+
+6. 프로그램을 끝내려면 창을 닫습니다.
+
+주의:
+- alarm_module_window.py와 my_audio_weights.weights.h5는 반드시 같은 폴더에 둡니다.
+- Windows 설정에서 마이크 접근 권한을 허용해야 합니다.
