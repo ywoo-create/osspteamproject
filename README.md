@@ -220,7 +220,7 @@ Close the GUI window to stop microphone input and terminate the program.
 
 ## 11. License
 
-* This project is licnsed under the MIT License
+This project is licnsed under the MIT License
 
 MIT License
 
