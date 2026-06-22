@@ -1,8 +1,0 @@
-tensorflow
-numpy
-sounddevice
-librosa
-noisereduce
-opencv-python
-soundfile
-scipy
