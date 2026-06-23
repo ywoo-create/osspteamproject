@@ -18,7 +18,7 @@ CLASS_LABELS = ['0_indoor_alarms', '1_outdoor_warnings', '2_emergency_alarms']
 ICONS        = ['🔵', '🟡', '🔴']
 
 # ─── 모델 구조 재건 + 가중치 로드 ────────────────────────────────────────────
-print("모델 구조 생성 중...")
+print("모델 구조 생성 ")
 model = models.Sequential([
     layers.Input(shape=(64, 64, 1)),
     layers.Rescaling(1.0/80.0, offset=1.0),
@@ -34,7 +34,7 @@ model = models.Sequential([
     layers.Dense(3, activation='softmax')
 ])
 model.load_weights(WEIGHTS_PATH)
-print(f"✅ 가중치 로드 완료! 입력 shape: {model.input_shape}\n")
+print(f" 가중치 로드 완료 입력 shape: {model.input_shape}\n")
 
 # ─── 상태 관리 ───────────────────────────────────────────────────────────────
 current_status = "대기 중"
@@ -128,7 +128,7 @@ def classification_loop():
 
 # ─── 메인 ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("\n🎤 실시간 오디오 분류기 시작")
+    print("\n 실시간 오디오 분류기 시작")
     print("   종료하려면 → Ctrl + C\n")
 
     st = threading.Thread(target=status_loop, daemon=True)
@@ -147,4 +147,4 @@ if __name__ == "__main__":
                 time.sleep(0.1)
         except KeyboardInterrupt:
             status_running = False
-            print("\n\n👋 종료되었습니다.")
+            print("\n\n 종료되었습니다.")
