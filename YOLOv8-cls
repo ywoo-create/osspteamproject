@@ -54,7 +54,7 @@ def save_mel_spectrogram_image(y, sr, save_path):
 
 
 # 5. 데이터 누수 방지를 위한 파일 분할 및 이미지 생성 작업
-print("\n🔍 드라이브에서 WAV 파일 목록을 수집하고 있습니다...")
+print("\n 드라이브에서 WAV 파일 목록을 수집하고 있습니다...")
 file_paths = []
 file_labels = []
 
@@ -73,7 +73,7 @@ train_files, val_files, train_labels, val_labels = train_test_split(
     file_paths, file_labels, test_size=0.2, random_state=42, stratify=file_labels
 )
 
-print(f"🖼️ 멜-스펙트로그램 이미지 변환 및 데이터 증강 시작...")
+print(f" 멜-스펙트로그램 이미지 변환 및 데이터 증강 시작")
 
 # [Train 데이터 처리] 원본 + 노이즈 + 피치변경 (3배 증강)
 for idx, (path, label) in enumerate(zip(train_files, train_labels)):
@@ -103,17 +103,17 @@ for idx, (path, label) in enumerate(zip(val_files, val_labels)):
     except Exception as e:
         continue
 
-print("✅ YOLO용 데이터셋 구축 완료!")
+print(" YOLO용 데이터셋 구축 완료")
 
 
 # ==============================================================================
 # 6. YOLOv8-cls 모델 로드 및 학습
 # ==============================================================================
-print("\n🚀 YOLOv8 분류 모델 로드 중...")
+print("\n YOLOv8 분류 모델 로드 중")
 model = YOLO('yolov8n-cls.pt') # 사전 학습된 가벼운 분류 모델
 
 # 모델 학습 진행
-print("\n🏋️ YOLO 모델 학습을 시작합니다...")
+print("\n YOLO 모델 학습 시작")
 results = model.train(
     data=YOLO_DATASET_PATH,  # train과 val 폴더가 들어있는 최상위 경로 지정
     epochs=15,               # 학습 횟수
@@ -125,11 +125,11 @@ results = model.train(
 # ==============================================================================
 # 7. 모델 검증 및 최종 정확도(Accuracy) 확인
 # ==============================================================================
-print("\n🧪 검증 데이터셋(val)을 사용하여 최종 정확도를 계산합니다...")
+print("\n 검증 데이터셋(val)을 사용하여 최종 정확도를 계산합니다...")
 metrics = model.val()
 
 # 요약 결과 출력
 print("-" * 50)
-print(f"🎯 최종 검증 정확도 (Top-1 Accuracy): {metrics.top1 * 100:.2f}%")
-print(f"🎯 Top-5 정확도 (클래스가 3개라 Top-1과 일치할 수 있음): {metrics.top5 * 100:.2f}%")
+print(f" 최종 검증 정확도 (Top-1 Accuracy): {metrics.top1 * 100:.2f}%")
+print(f" Top-5 정확도 (클래스가 3개라 Top-1과 일치할 수 있음): {metrics.top5 * 100:.2f}%")
 print("-" * 50)
