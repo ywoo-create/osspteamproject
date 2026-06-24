@@ -1,0 +1,27 @@
+import os
+import numpy as np
+import librosa
+import cv2
+
+DATASET_PATH = '/content/gdrive/MyDrive/OSSP_Project/dataset'
+classes = ['0_indoor_alarms', '1_outdoor_warnings', '2_emergency_alarms']
+
+def add_noise(data):
+    noise = np.random.randn(len(data))
+    return data + 0.005 * noise
+
+def extract_mel_spectrogram(file_path, augment=False):
+    y, sr = librosa.load(file_path, duration=3.0)
+    features = []
+    
+    mel = librosa.feature.melspectrogram(y=y, sr=sr)
+    features.append(cv2.resize(librosa.power_to_db(mel, ref=np.max), (64, 64)))
+   
+    if augment:
+        y_noise = add_noise(y)
+        features.append(cv2.resize(librosa.power_to_db(librosa.feature.melspectrogram(y=y_noise, sr=sr), ref=np.max), (64, 64)))
+        
+        y_pitch = librosa.effects.pitch_shift(y=y, sr=sr, n_steps=2)
+        features.append(cv2.resize(librosa.power_to_db(librosa.feature.melspectrogram(y=y_pitch, sr=sr), ref=np.max), (64, 64)))
+        
+    return features
